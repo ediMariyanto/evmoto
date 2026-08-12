@@ -217,4 +217,39 @@ public class WaitingCalculatorTest {
         assertThat(response.waitingFeeCapped()).isTrue();
     }
 
+
+    @Test
+    void shouldHaveNoFeeWhenCustomerCancelLessThanFreeWaitingTime() {
+
+        FeePreviewRequest request = new FeePreviewRequest(
+                OffsetDateTime.now(),
+                OffsetDateTime.now().plusMinutes(3),
+                EndReason.CANCELLED_BY_CUSTOMER,
+
+                new PickupPoint(
+                        PICKUP_LAT,
+                        PICKUP_LNG
+                ),
+
+                List.of(
+                        new DriverPing(
+                                OffsetDateTime.now(),
+                                PICKUP_LAT,
+                                PICKUP_LNG
+                        )
+                )
+        );
+
+
+        FeePreviewResponse response =
+                waitingFeeCalculatorService.calculate("ORD-001", request);
+
+        assertThat(response.waitingMinutes()).isEqualTo(3);
+        assertThat(response.freeWaitingMinutes()).isEqualTo(5);
+        assertThat(response.paidWaitingMinutes()).isZero();
+        assertThat(response.waitingFee()).isZero();
+        assertThat(response.totalFee()).isZero();
+        assertThat(response.waitingFeeCapped()).isFalse();
+    }
+
 }
