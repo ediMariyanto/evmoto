@@ -108,13 +108,16 @@ public class WaitingFeeCalculatorService {
 
             totalFee = waitingFee;
 
-            if (feePreviewRequest.endReason().equals(EndReason.CANCELLED_BY_CUSTOMER)){
-                cancellationFee = Math.min((waitingFee + CANCELLATION_FEE),  MAX_CANCELLATION_FEE);
-                log.debug("cancellationFee: {}", cancellationFee);
-                totalFee = cancellationFee;
+            if (feePreviewRequest.endReason().equals(EndReason.CANCELLED_BY_CUSTOMER)) {
+                long waitingCancelFee = paidWaitingMinutes * FEE_PER_MINUTE;
+                if (waitingCancelFee > 0) {
+                    cancellationFee = Math.min((waitingCancelFee + CANCELLATION_FEE), MAX_CANCELLATION_FEE);
+                    log.debug("cancellationFee: {}", cancellationFee);
+                    totalFee = cancellationFee;
 
-                if (cancellationFee == MAX_CANCELLATION_FEE)
-                    cancellationFeeCapped = true;
+                    if (cancellationFee == MAX_CANCELLATION_FEE)
+                        cancellationFeeCapped = true;
+                }
             }
         }
 
