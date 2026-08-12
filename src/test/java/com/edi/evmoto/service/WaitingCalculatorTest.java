@@ -545,4 +545,54 @@ public class WaitingCalculatorTest {
 
     }
 
+    @Test
+    void shouldCalculateFeeCorrectlyWhenDriverPingsAreUnordered() {
+
+        FeePreviewRequest request = new FeePreviewRequest(
+                OffsetDateTime.now(),
+                OffsetDateTime.now().plusMinutes(25),
+                EndReason.TRIP_STARTED,
+
+                new PickupPoint(
+                        PICKUP_LAT,
+                        PICKUP_LNG
+                ),
+
+                List.of(
+                        new DriverPing(
+                                OffsetDateTime.now().plusMinutes(20),
+                                PICKUP_LAT+ 0.00035,
+                                PICKUP_LNG
+                        ),  new DriverPing(
+                                OffsetDateTime.now().plusMinutes(5),
+                                PICKUP_LAT+ 0.00045,
+                                PICKUP_LNG
+                        ),  new DriverPing(
+                                OffsetDateTime.now().plusMinutes(10),
+                                PICKUP_LAT,
+                                PICKUP_LNG
+                        ),  new DriverPing(
+                                OffsetDateTime.now().plusMinutes(25),
+                                PICKUP_LAT+ 0.00135,
+                                PICKUP_LNG
+                        )
+                )
+        );
+
+
+        FeePreviewResponse response =
+                waitingFeeCalculatorService.calculate("ORD-001", request);
+
+        assertThat(response.waitingMinutes()).isEqualTo(20);
+        assertThat(response.freeWaitingMinutes()).isEqualTo(5);
+        assertThat(response.paidWaitingMinutes()).isEqualTo(10);
+        assertThat(response.pausedMinutes()).isEqualTo(10);
+        assertThat(response.waitingFee()).isEqualTo(5000);
+        assertThat(response.totalFee()).isEqualTo(5000);
+        assertThat(response.waitingFeeCapped()).isFalse();
+        assertThat(response.cancellationFee()).isZero();
+        assertThat(response.cancellationFeeCapped()).isFalse();
+
+    }
+
 }
