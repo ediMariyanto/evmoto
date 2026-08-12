@@ -39,7 +39,7 @@ public class WaitingCalculatorTest {
 
                 List.of(
                         new DriverPing(
-                                OffsetDateTime.now(),
+                                OffsetDateTime.now().plusMinutes(1),
                                 PICKUP_LAT,
                                 PICKUP_LNG
                         )
@@ -79,7 +79,7 @@ public class WaitingCalculatorTest {
 
                 List.of(
                         new DriverPing(
-                                arrivedAt,
+                                arrivedAt.plusMinutes(1),
                                 PICKUP_LAT,
                                 PICKUP_LNG
                         )
@@ -121,7 +121,7 @@ public class WaitingCalculatorTest {
 
                 List.of(
                         new DriverPing(
-                                arrivedAt,
+                                arrivedAt.plusMinutes(1),
                                 PICKUP_LAT,
                                 PICKUP_LNG
                         )
@@ -162,7 +162,7 @@ public class WaitingCalculatorTest {
 
                 List.of(
                         new DriverPing(
-                                arrivedAt,
+                                arrivedAt.plusMinutes(1),
                                 PICKUP_LAT,
                                 PICKUP_LNG
                         )
@@ -203,7 +203,7 @@ public class WaitingCalculatorTest {
 
                 List.of(
                         new DriverPing(
-                                arrivedAt,
+                                arrivedAt.plusMinutes(20),
                                 PICKUP_LAT,
                                 PICKUP_LNG
                         )
@@ -226,7 +226,6 @@ public class WaitingCalculatorTest {
         assertThat(response.cancellationFeeCapped()).isFalse();
     }
 
-
     @Test
     void shouldHaveNoFeeWhenCustomerCancelLessThanFreeWaitingTime() {
 
@@ -242,7 +241,7 @@ public class WaitingCalculatorTest {
 
                 List.of(
                         new DriverPing(
-                                OffsetDateTime.now(),
+                                OffsetDateTime.now().plusMinutes(2),
                                 PICKUP_LAT,
                                 PICKUP_LNG
                         )
@@ -293,7 +292,7 @@ public class WaitingCalculatorTest {
         assertThat(response.freeWaitingMinutes()).isEqualTo(5);
         assertThat(response.paidWaitingMinutes()).isEqualTo(5);
         assertThat(response.waitingFee()).isEqualTo(2500);
-        assertThat(response.cancellationFee()).isEqualTo(5000);
+        assertThat(response.cancellationFee()).isEqualTo(7500);
         assertThat(response.totalFee()).isEqualTo( 7500);
         assertThat(response.cancellationFeeCapped()).isFalse();
         assertThat(response.waitingFeeCapped()).isFalse();
@@ -329,10 +328,10 @@ public class WaitingCalculatorTest {
         assertThat(response.freeWaitingMinutes()).isEqualTo(5);
         assertThat(response.paidWaitingMinutes()).isEqualTo(35);
         assertThat(response.waitingFee()).isEqualTo(15000);
-        assertThat(response.cancellationFee()).isEqualTo(5000);
+        assertThat(response.cancellationFee()).isEqualTo(20000);
         assertThat(response.totalFee()).isEqualTo( 20000);
         assertThat(response.cancellationFeeCapped()).isTrue();
-        assertThat(response.waitingFeeCapped()).isFalse();
+        assertThat(response.waitingFeeCapped()).isTrue();
     }
 
     @Test
@@ -363,7 +362,7 @@ public class WaitingCalculatorTest {
 
         assertThat(response.waitingMinutes()).isEqualTo(40);
         assertThat(response.freeWaitingMinutes()).isEqualTo(5);
-        assertThat(response.paidWaitingMinutes()).isEqualTo(0);
+        assertThat(response.paidWaitingMinutes()).isEqualTo(35);
         assertThat(response.waitingFee()).isZero();
         assertThat(response.cancellationFee()).isZero();
         assertThat(response.totalFee()).isZero();
@@ -372,7 +371,7 @@ public class WaitingCalculatorTest {
     }
 
     @Test
-    void shouldHaveFeeWhenWaitingStatusToggledAndFreeWaitingTimeExceeded() {
+    void shouldCalculateActiveAndPausedTimeWhenDriverMovesOutAndBackToPickup() {
 
         FeePreviewRequest request = new FeePreviewRequest(
                 OffsetDateTime.now(),
@@ -548,9 +547,12 @@ public class WaitingCalculatorTest {
     @Test
     void shouldCalculateFeeCorrectlyWhenDriverPingsAreUnordered() {
 
+        OffsetDateTime arrivedAt =
+                OffsetDateTime.parse("2026-08-12T14:00:00+07:00");
+
         FeePreviewRequest request = new FeePreviewRequest(
-                OffsetDateTime.now(),
-                OffsetDateTime.now().plusMinutes(25),
+                arrivedAt,
+                arrivedAt.plusMinutes(25),
                 EndReason.TRIP_STARTED,
 
                 new PickupPoint(
@@ -558,41 +560,43 @@ public class WaitingCalculatorTest {
                         PICKUP_LNG
                 ),
 
+                // Sengaja unordered
                 List.of(
                         new DriverPing(
-                                OffsetDateTime.now().plusMinutes(20),
-                                PICKUP_LAT+ 0.00035,
+                                arrivedAt.plusMinutes(20),
+                                PICKUP_LAT + 0.00035,
                                 PICKUP_LNG
-                        ),  new DriverPing(
-                                OffsetDateTime.now().plusMinutes(5),
-                                PICKUP_LAT+ 0.00045,
+                        ),
+                        new DriverPing(
+                                arrivedAt.plusMinutes(5),
+                                PICKUP_LAT + 0.00045,
                                 PICKUP_LNG
-                        ),  new DriverPing(
-                                OffsetDateTime.now().plusMinutes(10),
+                        ),
+                        new DriverPing(
+                                arrivedAt.plusMinutes(10),
                                 PICKUP_LAT,
                                 PICKUP_LNG
-                        ),  new DriverPing(
-                                OffsetDateTime.now().plusMinutes(25),
-                                PICKUP_LAT+ 0.00135,
+                        ),
+                        new DriverPing(
+                                arrivedAt.plusMinutes(25),
+                                PICKUP_LAT + 0.00135,
                                 PICKUP_LNG
                         )
                 )
         );
-
 
         FeePreviewResponse response =
                 waitingFeeCalculatorService.calculate("ORD-001", request);
 
         assertThat(response.waitingMinutes()).isEqualTo(20);
         assertThat(response.freeWaitingMinutes()).isEqualTo(5);
-        assertThat(response.paidWaitingMinutes()).isEqualTo(10);
-        assertThat(response.pausedMinutes()).isEqualTo(10);
-        assertThat(response.waitingFee()).isEqualTo(5000);
-        assertThat(response.totalFee()).isEqualTo(5000);
+        assertThat(response.paidWaitingMinutes()).isEqualTo(15);
+        assertThat(response.pausedMinutes()).isEqualTo(5);
+        assertThat(response.waitingFee()).isEqualTo(7_500);
+        assertThat(response.totalFee()).isEqualTo(7_500);
         assertThat(response.waitingFeeCapped()).isFalse();
         assertThat(response.cancellationFee()).isZero();
         assertThat(response.cancellationFeeCapped()).isFalse();
-
     }
 
 }

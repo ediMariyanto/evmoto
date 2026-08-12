@@ -39,88 +39,89 @@ public class WaitingFeeCalculatorService {
         long cancellationFee = 0;
         long totalFee = 0;
 
+
+        List<DriverPing> pings =
+                feePreviewRequest.driverPings()
+                        .stream()
+                        .sorted(Comparator.comparing(DriverPing::at))
+                        .toList();
+
+        log.debug("pings: {}", pings);
+
+        long activeSeconds = 0;
+        long pausedSeconds = 0;
+
+        OffsetDateTime currentTime = feePreviewRequest.arrivedAt();
+        log.debug("currentTime: {}", currentTime);
+
+        boolean isActive = true;
+
+        for (DriverPing driverPing : pings) {
+            log.debug("driverPing: {}", driverPing);
+
+            OffsetDateTime pingTime = driverPing.at();
+
+            long seconds = Duration.between(currentTime, pingTime).getSeconds();
+            log.debug("seconds: {}", seconds);
+
+            isActive = isWithinRadius(feePreviewRequest.pickupPoint().lat(), feePreviewRequest.pickupPoint().lng(), driverPing.lat(), driverPing.lng(), MAX_PICKUP_DISTANCE_METERS);
+            log.debug("isActive: {}", isActive);
+            if (isActive) {
+                activeSeconds += seconds;
+            } else {
+                pausedSeconds += seconds;
+            }
+            currentTime = pingTime;
+
+            log.debug("currentTime: {}", currentTime);
+            log.debug("seconds: {} {}", activeSeconds, pausedSeconds);
+        }
+
+        if (currentTime.isBefore(feePreviewRequest.endedAt())) {
+            long remainingSeconds = Duration.between(
+                    currentTime,
+                    feePreviewRequest.endedAt()
+            ).getSeconds();
+
+            if (isActive) {
+                activeSeconds += remainingSeconds;
+            } else {
+                pausedSeconds += remainingSeconds;
+            }
+        }
+        log.debug("SecondsFinal: {} {}", activeSeconds, pausedSeconds);
+
+        int activeMinutes = (int) ((activeSeconds + 59) / 60);
+        int pauseMinutes = (int) ((pausedSeconds + 59) / 60);
+
+        log.debug("Minutes: {} {} ", activeMinutes, pauseMinutes);
+
+        waitingMinutes = activeMinutes;
+        pausedMinutes = pauseMinutes;
+
+        paidWaitingMinutes = Math.max(waitingMinutes - FREE_WAITING_MINUTES, 0);
+
         if (feePreviewRequest.endReason().equals(EndReason.CANCELLED_BY_CUSTOMER) || feePreviewRequest.endReason().equals(EndReason.TRIP_STARTED)) {
 
-            List<DriverPing> pings =
-                    feePreviewRequest.driverPings()
-                            .stream()
-                            .sorted(Comparator.comparing(DriverPing::at))
-                            .toList();
-
-            log.debug("pings: {}", pings);
-
-            long activeSeconds = 0;
-            long pausedSeconds = 0;
-
-            OffsetDateTime currentTime = feePreviewRequest.arrivedAt();
-            log.debug("currentTime: {}", currentTime);
-
-            boolean isActive = true;
-
-            for (DriverPing driverPing : pings) {
-                log.debug("driverPing: {}", driverPing);
-
-                OffsetDateTime pingTime = driverPing.at();
-
-                long seconds = Duration.between(currentTime, pingTime).getSeconds();
-                log.debug("seconds: {}", seconds);
-
-                isActive = isWithinRadius(feePreviewRequest.pickupPoint().lat(), feePreviewRequest.pickupPoint().lng(), driverPing.lat(), driverPing.lng(), MAX_PICKUP_DISTANCE_METERS);
-                log.debug("isActive: {}", isActive);
-                if (isActive) {
-                    activeSeconds += seconds;
-                } else {
-                    pausedSeconds += seconds;
-                }
-                currentTime = pingTime;
-
-                log.debug("currentTime: {}", currentTime);
-                log.debug("seconds: {} {}", activeSeconds, pausedSeconds);
-            }
-
-            if (currentTime.isBefore(feePreviewRequest.endedAt())) {
-                long remainingSeconds = Duration.between(
-                        currentTime,
-                        feePreviewRequest.endedAt()
-                ).getSeconds();
-
-                if (isActive) {
-                    activeSeconds += remainingSeconds;
-                } else {
-                    pausedSeconds += remainingSeconds;
-                }
-            }
-            log.debug("SecondsFinal: {} {}", activeSeconds, pausedSeconds);
-
-            int activeMinutes = (int) ((activeSeconds + 59) / 60);
-            int pauseMinutes = (int) ((pausedSeconds + 59) / 60);
-
-            log.debug("Minutes: {} {} ", activeMinutes, pauseMinutes);
-
-            waitingMinutes = activeMinutes;
-            pausedMinutes = pauseMinutes;
-
-            paidWaitingMinutes = Math.max(waitingMinutes - FREE_WAITING_MINUTES, 0);
             log.debug("paidWaitingMinutes: {}", paidWaitingMinutes);
 
             waitingFee = Math.min((paidWaitingMinutes * FEE_PER_MINUTE), MAX_WAITING_FEE);
             log.debug("waitingFee: {}", waitingFee);
 
+            if (waitingFee == MAX_WAITING_FEE) {
+                waitingFeeCapped = true;
+            }
+
             if (feePreviewRequest.endReason().equals(EndReason.CANCELLED_BY_CUSTOMER)) {
                 long waitingCancelFee = paidWaitingMinutes * FEE_PER_MINUTE;
                 if (waitingCancelFee > 0) {
-                    cancellationFee = CANCELLATION_FEE;
-                    long cancelWithWaitingFee = cancellationFee + waitingFee;
-                    totalFee = Math.min(cancelWithWaitingFee, MAX_CANCELLATION_FEE);
+                    cancellationFee = CANCELLATION_FEE + waitingFee;
+                    totalFee = Math.min(cancellationFee, MAX_CANCELLATION_FEE);
 
-                    if (cancelWithWaitingFee == MAX_CANCELLATION_FEE)
+                    if (cancellationFee == MAX_CANCELLATION_FEE)
                         cancellationFeeCapped = true;
                 }
             } else {
-                if (waitingFee == MAX_WAITING_FEE) {
-                    waitingFeeCapped = true;
-                }
-
                 totalFee = waitingFee;
             }
         }
