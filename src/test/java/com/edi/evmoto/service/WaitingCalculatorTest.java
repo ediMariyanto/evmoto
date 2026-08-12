@@ -178,4 +178,43 @@ public class WaitingCalculatorTest {
         assertThat(response.waitingFeeCapped()).isFalse();
     }
 
+    @Test
+    void shouldHaveFeeWhenWaitingFortyMinutes() {
+
+        OffsetDateTime arrivedAt =
+                OffsetDateTime.parse("2026-08-12T14:00:00+07:00");
+
+        FeePreviewRequest request = new FeePreviewRequest(
+                arrivedAt,
+                arrivedAt.plusMinutes(40),
+                EndReason.TRIP_STARTED,
+
+                new PickupPoint(
+                        PICKUP_LAT,
+                        PICKUP_LNG
+                ),
+
+                List.of(
+                        new DriverPing(
+                                arrivedAt,
+                                PICKUP_LAT,
+                                PICKUP_LNG
+                        )
+                )
+        );
+
+        FeePreviewResponse response =
+                waitingFeeCalculatorService.calculate(
+                        "ORD-002",
+                        request
+                );
+
+        assertThat(response.waitingMinutes()).isEqualTo(40);
+        assertThat(response.freeWaitingMinutes()).isEqualTo(5);
+        assertThat(response.paidWaitingMinutes()).isEqualTo(35);
+        assertThat(response.waitingFee()).isEqualTo(15000);
+        assertThat(response.totalFee()).isEqualTo(15000);
+        assertThat(response.waitingFeeCapped()).isTrue();
+    }
+
 }
