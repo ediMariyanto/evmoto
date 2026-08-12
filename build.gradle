@@ -28,6 +28,10 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+        showStandardStreams = true // Opsional: menampilkan System.out / log di terminal
+    }
 }
 
 defaultTasks 'bootRun'
