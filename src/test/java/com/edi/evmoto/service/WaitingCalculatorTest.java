@@ -58,6 +58,9 @@ public class WaitingCalculatorTest {
         assertThat(response.waitingFee()).isZero();
         assertThat(response.totalFee()).isZero();
         assertThat(response.waitingFeeCapped()).isFalse();
+        assertThat(response.cancellationFee()).isZero();
+        assertThat(response.cancellationFeeCapped()).isFalse();
+
     }
 
     @Test
@@ -97,6 +100,8 @@ public class WaitingCalculatorTest {
         assertThat(response.waitingFee()).isZero();
         assertThat(response.totalFee()).isZero();
         assertThat(response.waitingFeeCapped()).isFalse();
+        assertThat(response.cancellationFee()).isZero();
+        assertThat(response.cancellationFeeCapped()).isFalse();
     }
 
 
@@ -137,6 +142,8 @@ public class WaitingCalculatorTest {
         assertThat(response.waitingFee()).isEqualTo(500);
         assertThat(response.totalFee()).isEqualTo(500);
         assertThat(response.waitingFeeCapped()).isFalse();
+        assertThat(response.cancellationFee()).isZero();
+        assertThat(response.cancellationFeeCapped()).isFalse();
     }
 
     @Test
@@ -176,6 +183,8 @@ public class WaitingCalculatorTest {
         assertThat(response.waitingFee()).isEqualTo(2500);
         assertThat(response.totalFee()).isEqualTo(2500);
         assertThat(response.waitingFeeCapped()).isFalse();
+        assertThat(response.cancellationFee()).isZero();
+        assertThat(response.cancellationFeeCapped()).isFalse();
     }
 
     @Test
@@ -215,6 +224,8 @@ public class WaitingCalculatorTest {
         assertThat(response.waitingFee()).isEqualTo(15000);
         assertThat(response.totalFee()).isEqualTo(15000);
         assertThat(response.waitingFeeCapped()).isTrue();
+        assertThat(response.cancellationFee()).isZero();
+        assertThat(response.cancellationFeeCapped()).isFalse();
     }
 
 
@@ -250,6 +261,8 @@ public class WaitingCalculatorTest {
         assertThat(response.cancellationFee()).isZero();
         assertThat(response.totalFee()).isZero();
         assertThat(response.cancellationFeeCapped()).isFalse();
+        assertThat(response.waitingFee()).isZero();
+        assertThat(response.waitingFeeCapped()).isFalse();
     }
 
     @Test
@@ -285,6 +298,7 @@ public class WaitingCalculatorTest {
         assertThat(response.cancellationFee()).isEqualTo(5000);
         assertThat(response.totalFee()).isEqualTo( 7500);
         assertThat(response.cancellationFeeCapped()).isFalse();
+        assertThat(response.waitingFeeCapped()).isFalse();
     }
 
     @Test
@@ -320,6 +334,7 @@ public class WaitingCalculatorTest {
         assertThat(response.cancellationFee()).isEqualTo(5000);
         assertThat(response.totalFee()).isEqualTo( 20000);
         assertThat(response.cancellationFeeCapped()).isTrue();
+        assertThat(response.waitingFeeCapped()).isFalse();
     }
 
 }
