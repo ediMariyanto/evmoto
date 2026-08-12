@@ -17,6 +17,11 @@ public class FeePreviewController {
 
     @PostMapping("/{orderId}/fee-preview")
     public ResponseEntity<FeePreviewResponse> feePreview(@PathVariable("orderId") String orderId, @RequestBody FeePreviewRequest request){
+        if (request.endedAt().isBefore(request.arrivedAt()))
+            throw new IllegalArgumentException("Order endedAt must be before arrivedAt");
+        if (orderId == null)
+            throw new IllegalArgumentException("Order id cannot be null");
+
         FeePreviewResponse response = feePreviewService.feePreview(orderId, request);
         return ResponseEntity.ok(response);
     }
