@@ -1,4 +1,64 @@
 package com.edi.evmoto.service;
 
+import com.edi.evmoto.dto.DriverPing;
+import com.edi.evmoto.dto.FeePreviewRequest;
+import com.edi.evmoto.dto.FeePreviewResponse;
+import com.edi.evmoto.dto.PickupPoint;
+import com.edi.evmoto.model.EndReason;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.util.List;
+import static org.assertj.core.api.Assertions.assertThat;
+
 public class WaitingCalculatorTest {
+
+    private WaitingFeeCalculatorService waitingFeeCalculatorService;
+
+    private static final double PICKUP_LAT = -6.208800;
+    private static final double PICKUP_LNG = 106.845600;
+
+    @BeforeEach
+    void setUp() {
+        waitingFeeCalculatorService = new WaitingFeeCalculatorService();
+    }
+
+    @Test
+    void shouldHaveNoFeeWhenWaitingLessThanFreeWaitingTime() {
+
+        FeePreviewRequest request = new FeePreviewRequest(
+                OffsetDateTime.now(),
+                OffsetDateTime.now().plusMinutes(3),
+                EndReason.TRIP_STARTED,
+
+                new PickupPoint(
+                        PICKUP_LAT,
+                        PICKUP_LNG
+                ),
+
+                List.of(
+                        new DriverPing(
+                                OffsetDateTime.now(),
+                                PICKUP_LAT,
+                                PICKUP_LNG
+                        )
+                )
+        );
+
+
+        FeePreviewResponse response =
+                waitingFeeCalculatorService.calculate("ORD-001", request);
+
+        assertThat(response.waitingMinutes()).isEqualTo(3);
+        assertThat(response.freeWaitingMinutes()).isEqualTo(3);
+        assertThat(response.paidWaitingMinutes()).isZero();
+        assertThat(response.waitingFee()).isZero();
+        assertThat(response.totalFee()).isZero();
+        assertThat(response.waitingFeeCapped()).isFalse();
+    }
+
+
 }
