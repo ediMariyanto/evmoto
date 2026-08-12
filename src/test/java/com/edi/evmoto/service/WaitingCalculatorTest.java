@@ -108,7 +108,7 @@ public class WaitingCalculatorTest {
 
         FeePreviewRequest request = new FeePreviewRequest(
                 arrivedAt,
-                arrivedAt.plusMinutes(6),
+                arrivedAt.plusMinutes(5).plusSeconds(1),
                 EndReason.TRIP_STARTED,
 
                 new PickupPoint(
@@ -136,6 +136,45 @@ public class WaitingCalculatorTest {
         assertThat(response.paidWaitingMinutes()).isEqualTo(1);
         assertThat(response.waitingFee()).isEqualTo(500);
         assertThat(response.totalFee()).isEqualTo(500);
+        assertThat(response.waitingFeeCapped()).isFalse();
+    }
+
+    @Test
+    void shouldHaveFeeWhenWaitingTenMinutes() {
+
+        OffsetDateTime arrivedAt =
+                OffsetDateTime.parse("2026-08-12T14:00:00+07:00");
+
+        FeePreviewRequest request = new FeePreviewRequest(
+                arrivedAt,
+                arrivedAt.plusMinutes(10),
+                EndReason.TRIP_STARTED,
+
+                new PickupPoint(
+                        PICKUP_LAT,
+                        PICKUP_LNG
+                ),
+
+                List.of(
+                        new DriverPing(
+                                arrivedAt,
+                                PICKUP_LAT,
+                                PICKUP_LNG
+                        )
+                )
+        );
+
+        FeePreviewResponse response =
+                waitingFeeCalculatorService.calculate(
+                        "ORD-002",
+                        request
+                );
+
+        assertThat(response.waitingMinutes()).isEqualTo(10);
+        assertThat(response.freeWaitingMinutes()).isEqualTo(5);
+        assertThat(response.paidWaitingMinutes()).isEqualTo(5);
+        assertThat(response.waitingFee()).isEqualTo(2500);
+        assertThat(response.totalFee()).isEqualTo(2500);
         assertThat(response.waitingFeeCapped()).isFalse();
     }
 
