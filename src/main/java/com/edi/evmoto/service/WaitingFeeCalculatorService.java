@@ -55,6 +55,8 @@ public class WaitingFeeCalculatorService {
             OffsetDateTime currentTime = feePreviewRequest.arrivedAt();
             log.debug("currentTime: {}", currentTime);
 
+            boolean isActive = true;
+
             for (DriverPing driverPing : pings) {
                 log.debug("driverPing: {}", driverPing);
 
@@ -63,7 +65,7 @@ public class WaitingFeeCalculatorService {
                 long seconds = Duration.between(currentTime, pingTime).getSeconds();
                 log.debug("seconds: {}", seconds);
 
-                boolean isActive = isWithinRadius(feePreviewRequest.pickupPoint().lat(), feePreviewRequest.pickupPoint().lng(), driverPing.lat(), driverPing.lng(), MAX_PICKUP_DISTANCE_METERS);
+                isActive = isWithinRadius(feePreviewRequest.pickupPoint().lat(), feePreviewRequest.pickupPoint().lng(), driverPing.lat(), driverPing.lng(), MAX_PICKUP_DISTANCE_METERS);
                 log.debug("isActive: {}", isActive);
                 if (isActive) {
                     activeSeconds += seconds;
@@ -74,6 +76,19 @@ public class WaitingFeeCalculatorService {
 
                 log.debug("currentTime: {}", currentTime);
                 log.debug("seconds: {} {}", activeSeconds, pausedSeconds);
+            }
+
+            if (currentTime.isBefore(feePreviewRequest.endedAt())) {
+                long remainingSeconds = Duration.between(
+                        currentTime,
+                        feePreviewRequest.endedAt()
+                ).getSeconds();
+
+                if (isActive) {
+                    activeSeconds += remainingSeconds;
+                } else {
+                    pausedSeconds += remainingSeconds;
+                }
             }
             log.debug("SecondsFinal: {} {}", activeSeconds, pausedSeconds);
 
