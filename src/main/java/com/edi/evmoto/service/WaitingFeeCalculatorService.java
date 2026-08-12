@@ -111,11 +111,11 @@ public class WaitingFeeCalculatorService {
             if (feePreviewRequest.endReason().equals(EndReason.CANCELLED_BY_CUSTOMER)) {
                 long waitingCancelFee = paidWaitingMinutes * FEE_PER_MINUTE;
                 if (waitingCancelFee > 0) {
-                    cancellationFee = Math.min((waitingCancelFee + CANCELLATION_FEE), MAX_CANCELLATION_FEE);
-                    log.debug("cancellationFee: {}", cancellationFee);
-                    totalFee = cancellationFee;
+                    cancellationFee = CANCELLATION_FEE;
+                    long cancelWithWaitingFee = cancellationFee + waitingFee;
+                    totalFee = Math.min(cancelWithWaitingFee , MAX_CANCELLATION_FEE );
 
-                    if (cancellationFee == MAX_CANCELLATION_FEE)
+                    if (cancelWithWaitingFee == MAX_CANCELLATION_FEE)
                         cancellationFeeCapped = true;
                 }
             }
