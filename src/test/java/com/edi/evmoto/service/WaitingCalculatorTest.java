@@ -9,8 +9,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -335,6 +333,87 @@ public class WaitingCalculatorTest {
         assertThat(response.totalFee()).isEqualTo( 20000);
         assertThat(response.cancellationFeeCapped()).isTrue();
         assertThat(response.waitingFeeCapped()).isFalse();
+    }
+
+    @Test
+    void shouldHaveNoFeeWhenCancelledByDriver() {
+
+        FeePreviewRequest request = new FeePreviewRequest(
+                OffsetDateTime.now(),
+                OffsetDateTime.now().plusMinutes(40),
+                EndReason.CANCELLED_BY_DRIVER,
+
+                new PickupPoint(
+                        PICKUP_LAT,
+                        PICKUP_LNG
+                ),
+
+                List.of(
+                        new DriverPing(
+                                OffsetDateTime.now(),
+                                PICKUP_LAT,
+                                PICKUP_LNG
+                        )
+                )
+        );
+
+
+        FeePreviewResponse response =
+                waitingFeeCalculatorService.calculate("ORD-001", request);
+
+        assertThat(response.waitingMinutes()).isEqualTo(40);
+        assertThat(response.freeWaitingMinutes()).isEqualTo(5);
+        assertThat(response.paidWaitingMinutes()).isEqualTo(0);
+        assertThat(response.waitingFee()).isZero();
+        assertThat(response.cancellationFee()).isZero();
+        assertThat(response.totalFee()).isZero();
+        assertThat(response.cancellationFeeCapped()).isFalse();
+        assertThat(response.waitingFeeCapped()).isFalse();
+    }
+
+    @Test
+    void shouldHaveFeeWhenWaitingStatusToggledAndFreeWaitingTimeExceeded() {
+
+        FeePreviewRequest request = new FeePreviewRequest(
+                OffsetDateTime.now(),
+                OffsetDateTime.now().plusMinutes(25),
+                EndReason.TRIP_STARTED,
+
+                new PickupPoint(
+                        PICKUP_LAT,
+                        PICKUP_LNG
+                ),
+
+                List.of(
+                        new DriverPing(
+                                OffsetDateTime.now(),
+                                PICKUP_LAT,
+                                PICKUP_LNG
+                        ),  new DriverPing(
+                                OffsetDateTime.now().plusMinutes(10),
+                                PICKUP_LAT+ 0.00135,
+                                PICKUP_LNG
+                        ),  new DriverPing(
+                                OffsetDateTime.now().plusMinutes(25),
+                                PICKUP_LAT+ 0.00045,
+                                PICKUP_LNG
+                        )
+                )
+        );
+
+
+        FeePreviewResponse response =
+                waitingFeeCalculatorService.calculate("ORD-001", request);
+
+        assertThat(response.waitingMinutes()).isEqualTo(15);
+        assertThat(response.freeWaitingMinutes()).isEqualTo(5);
+        assertThat(response.paidWaitingMinutes()).isEqualTo(10);
+        assertThat(response.waitingFee()).isEqualTo(5000);
+        assertThat(response.totalFee()).isEqualTo(5000);
+        assertThat(response.waitingFeeCapped()).isFalse();
+        assertThat(response.cancellationFee()).isZero();
+        assertThat(response.cancellationFeeCapped()).isFalse();
+
     }
 
 }
