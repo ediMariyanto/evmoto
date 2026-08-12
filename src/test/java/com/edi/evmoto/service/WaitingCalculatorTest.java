@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -294,7 +295,7 @@ public class WaitingCalculatorTest {
         assertThat(response.paidWaitingMinutes()).isEqualTo(5);
         assertThat(response.waitingFee()).isEqualTo(2500);
         assertThat(response.cancellationFee()).isEqualTo(7500);
-        assertThat(response.totalFee()).isEqualTo( 7500);
+        assertThat(response.totalFee()).isEqualTo(7500);
         assertThat(response.cancellationFeeCapped()).isFalse();
         assertThat(response.waitingFeeCapped()).isFalse();
     }
@@ -330,7 +331,7 @@ public class WaitingCalculatorTest {
         assertThat(response.paidWaitingMinutes()).isEqualTo(35);
         assertThat(response.waitingFee()).isEqualTo(15000);
         assertThat(response.cancellationFee()).isEqualTo(20000);
-        assertThat(response.totalFee()).isEqualTo( 20000);
+        assertThat(response.totalFee()).isEqualTo(20000);
         assertThat(response.cancellationFeeCapped()).isTrue();
         assertThat(response.waitingFeeCapped()).isTrue();
     }
@@ -389,13 +390,13 @@ public class WaitingCalculatorTest {
                                 OffsetDateTime.now(),
                                 PICKUP_LAT,
                                 PICKUP_LNG
-                        ),  new DriverPing(
+                        ), new DriverPing(
                                 OffsetDateTime.now().plusMinutes(10),
-                                PICKUP_LAT+ 0.00135,
+                                PICKUP_LAT + 0.00135,
                                 PICKUP_LNG
-                        ),  new DriverPing(
+                        ), new DriverPing(
                                 OffsetDateTime.now().plusMinutes(25),
-                                PICKUP_LAT+ 0.00045,
+                                PICKUP_LAT + 0.00045,
                                 PICKUP_LNG
                         )
                 )
@@ -434,21 +435,21 @@ public class WaitingCalculatorTest {
                                 OffsetDateTime.now(),
                                 PICKUP_LAT,
                                 PICKUP_LNG
-                        ),  new DriverPing(
+                        ), new DriverPing(
                                 OffsetDateTime.now().plusMinutes(10),
-                                PICKUP_LAT+ 0.00135,
+                                PICKUP_LAT + 0.00135,
                                 PICKUP_LNG
-                        ),  new DriverPing(
+                        ), new DriverPing(
                                 OffsetDateTime.now().plusMinutes(20),
-                                PICKUP_LAT+ 0.00045,
+                                PICKUP_LAT + 0.00045,
                                 PICKUP_LNG
                         )
                 )
-            );
+        );
 
 
-            FeePreviewResponse response =
-                    waitingFeeCalculatorService.calculate("ORD-001", request);
+        FeePreviewResponse response =
+                waitingFeeCalculatorService.calculate("ORD-001", request);
 
         assertThat(response.waitingMinutes()).isEqualTo(15);
         assertThat(response.freeWaitingMinutes()).isEqualTo(5);
@@ -459,7 +460,7 @@ public class WaitingCalculatorTest {
         assertThat(response.cancellationFee()).isZero();
         assertThat(response.cancellationFeeCapped()).isFalse();
 
-        }
+    }
 
     @Test
     void shouldHaveNoFeeWhenPingPauseAll() throws Exception {
@@ -477,15 +478,15 @@ public class WaitingCalculatorTest {
                 List.of(
                         new DriverPing(
                                 OffsetDateTime.now(),
-                                PICKUP_LAT+ 0.00135,
+                                PICKUP_LAT + 0.00135,
                                 PICKUP_LNG
-                        ),  new DriverPing(
+                        ), new DriverPing(
                                 OffsetDateTime.now().plusMinutes(10),
-                                PICKUP_LAT+ 0.00135,
+                                PICKUP_LAT + 0.00135,
                                 PICKUP_LNG
-                        ),  new DriverPing(
+                        ), new DriverPing(
                                 OffsetDateTime.now().plusMinutes(20),
-                                PICKUP_LAT+ 0.00135,
+                                PICKUP_LAT + 0.00135,
                                 PICKUP_LNG
                         )
                 )
@@ -523,7 +524,7 @@ public class WaitingCalculatorTest {
                 List.of(
                         new DriverPing(
                                 OffsetDateTime.now().plusMinutes(5),
-                                PICKUP_LAT+ 0.00135,
+                                PICKUP_LAT + 0.00135,
                                 PICKUP_LNG
                         )
                 )
