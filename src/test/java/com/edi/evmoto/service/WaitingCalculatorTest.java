@@ -287,4 +287,39 @@ public class WaitingCalculatorTest {
         assertThat(response.cancellationFeeCapped()).isFalse();
     }
 
+    @Test
+    void shouldCapFeeAtMaximumWhenCancelledByCustomer() {
+
+        FeePreviewRequest request = new FeePreviewRequest(
+                OffsetDateTime.now(),
+                OffsetDateTime.now().plusMinutes(40),
+                EndReason.CANCELLED_BY_CUSTOMER,
+
+                new PickupPoint(
+                        PICKUP_LAT,
+                        PICKUP_LNG
+                ),
+
+                List.of(
+                        new DriverPing(
+                                OffsetDateTime.now(),
+                                PICKUP_LAT,
+                                PICKUP_LNG
+                        )
+                )
+        );
+
+
+        FeePreviewResponse response =
+                waitingFeeCalculatorService.calculate("ORD-001", request);
+
+        assertThat(response.waitingMinutes()).isEqualTo(40);
+        assertThat(response.freeWaitingMinutes()).isEqualTo(5);
+        assertThat(response.paidWaitingMinutes()).isEqualTo(35);
+        assertThat(response.waitingFee()).isEqualTo(15000);
+        assertThat(response.cancellationFee()).isEqualTo(5000);
+        assertThat(response.totalFee()).isEqualTo( 20000);
+        assertThat(response.cancellationFeeCapped()).isTrue();
+    }
+
 }

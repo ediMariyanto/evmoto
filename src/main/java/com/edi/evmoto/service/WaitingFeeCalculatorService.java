@@ -95,7 +95,7 @@ public class WaitingFeeCalculatorService {
             int activeMinutes = (int) ((activeSeconds + 59) / 60);
             int pauseMinutes = (int) ((pausedSeconds + 59) / 60);
 
-            log.debug("Minutes: {} {} ", activeMinutes,  pauseMinutes);
+            log.debug("Minutes: {} {} ", activeMinutes, pauseMinutes);
 
             waitingMinutes = activeMinutes;
             pausedMinutes = pauseMinutes;
@@ -103,26 +103,26 @@ public class WaitingFeeCalculatorService {
             paidWaitingMinutes = Math.max(waitingMinutes - FREE_WAITING_MINUTES, 0);
             log.debug("paidWaitingMinutes: {}", paidWaitingMinutes);
 
-            waitingFee = Math.min((paidWaitingMinutes * FEE_PER_MINUTE), MAX_WAITING_FEE );
+            waitingFee = Math.min((paidWaitingMinutes * FEE_PER_MINUTE), MAX_WAITING_FEE);
             log.debug("waitingFee: {}", waitingFee);
-
-            totalFee = waitingFee;
 
             if (feePreviewRequest.endReason().equals(EndReason.CANCELLED_BY_CUSTOMER)) {
                 long waitingCancelFee = paidWaitingMinutes * FEE_PER_MINUTE;
                 if (waitingCancelFee > 0) {
                     cancellationFee = CANCELLATION_FEE;
                     long cancelWithWaitingFee = cancellationFee + waitingFee;
-                    totalFee = Math.min(cancelWithWaitingFee , MAX_CANCELLATION_FEE );
+                    totalFee = Math.min(cancelWithWaitingFee, MAX_CANCELLATION_FEE);
 
                     if (cancelWithWaitingFee == MAX_CANCELLATION_FEE)
                         cancellationFeeCapped = true;
                 }
-            }
-        }
+            } else {
+                if (waitingFee == MAX_WAITING_FEE) {
+                    waitingFeeCapped = true;
+                }
 
-        if (waitingFee == MAX_WAITING_FEE) {
-            waitingFeeCapped = true;
+                totalFee = waitingFee;
+            }
         }
 
         return new FeePreviewResponse(
