@@ -26,8 +26,13 @@ public class WaitingFeeCalculatorService {
     private static final long MAX_CANCELLATION_FEE = 20_000;
     private static final double MAX_PICKUP_DISTANCE_METERS = 100.0;
 
-    public FeePreviewResponse calculate(String orderId, FeePreviewRequest feePreviewRequest) /*throws Exception*/ {
+    public FeePreviewResponse calculate(String orderId, FeePreviewRequest feePreviewRequest) throws Exception {
         log.info("calculate : {} {}", orderId, feePreviewRequest);
+
+        if (feePreviewRequest.endedAt().isBefore(feePreviewRequest.arrivedAt()))
+            throw new Exception("Order endedAt must be before arrivedAt");
+        if (orderId == null)
+            throw new Exception("Order id cannot be null");
 
         boolean waitingFeeCapped = false;
         boolean cancellationFeeCapped = false;

@@ -11,7 +11,7 @@ public class FeePreviewService {
     @Autowired
     WaitingFeeCalculatorService waitingFeeCalculatorService;
 
-    public FeePreviewResponse feePreview(String orderId,FeePreviewRequest request) {
+    public FeePreviewResponse feePreview(String orderId,FeePreviewRequest request) throws Exception {
         return waitingFeeCalculatorService.calculate(orderId, request);
     }
 }

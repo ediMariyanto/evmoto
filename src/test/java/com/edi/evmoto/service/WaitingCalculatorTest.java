@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import java.time.OffsetDateTime;
 import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 public class WaitingCalculatorTest {
 
@@ -25,7 +26,7 @@ public class WaitingCalculatorTest {
     }
 
     @Test
-    void shouldHaveNoFeeWhenWaitingLessThanFreeWaitingTime() {
+    void shouldHaveNoFeeWhenWaitingLessThanFreeWaitingTime() throws Exception {
 
         FeePreviewRequest request = new FeePreviewRequest(
                 OffsetDateTime.now(),
@@ -62,7 +63,7 @@ public class WaitingCalculatorTest {
     }
 
     @Test
-    void shouldHaveNoFeeWhenWaitingExactlyFiveMinutes() {
+    void shouldHaveNoFeeWhenWaitingExactlyFiveMinutes() throws Exception {
 
         OffsetDateTime arrivedAt =
                 OffsetDateTime.parse("2026-08-12T14:00:00+07:00");
@@ -104,7 +105,7 @@ public class WaitingCalculatorTest {
 
 
     @Test
-    void shouldHaveFeeWhenWaitingFiveMinutesAndOneSecond() {
+    void shouldHaveFeeWhenWaitingFiveMinutesAndOneSecond() throws Exception {
 
         OffsetDateTime arrivedAt =
                 OffsetDateTime.parse("2026-08-12T14:00:00+07:00");
@@ -145,7 +146,7 @@ public class WaitingCalculatorTest {
     }
 
     @Test
-    void shouldHaveFeeWhenWaitingTenMinutes() {
+    void shouldHaveFeeWhenWaitingTenMinutes() throws Exception {
 
         OffsetDateTime arrivedAt =
                 OffsetDateTime.parse("2026-08-12T14:00:00+07:00");
@@ -186,7 +187,7 @@ public class WaitingCalculatorTest {
     }
 
     @Test
-    void shouldHaveFeeWhenWaitingFortyMinutes() {
+    void shouldHaveFeeWhenWaitingFortyMinutes() throws Exception {
 
         OffsetDateTime arrivedAt =
                 OffsetDateTime.parse("2026-08-12T14:00:00+07:00");
@@ -227,7 +228,7 @@ public class WaitingCalculatorTest {
     }
 
     @Test
-    void shouldHaveNoFeeWhenCustomerCancelLessThanFreeWaitingTime() {
+    void shouldHaveNoFeeWhenCustomerCancelLessThanFreeWaitingTime() throws Exception {
 
         FeePreviewRequest request = new FeePreviewRequest(
                 OffsetDateTime.now(),
@@ -263,7 +264,7 @@ public class WaitingCalculatorTest {
     }
 
     @Test
-    void shouldHaveFeeWhenCancelledByCustomerAfterTenMinutes() {
+    void shouldHaveFeeWhenCancelledByCustomerAfterTenMinutes() throws Exception {
 
         FeePreviewRequest request = new FeePreviewRequest(
                 OffsetDateTime.now(),
@@ -299,7 +300,7 @@ public class WaitingCalculatorTest {
     }
 
     @Test
-    void shouldCapFeeAtMaximumWhenCancelledByCustomer() {
+    void shouldCapFeeAtMaximumWhenCancelledByCustomer() throws Exception {
 
         FeePreviewRequest request = new FeePreviewRequest(
                 OffsetDateTime.now(),
@@ -335,7 +336,7 @@ public class WaitingCalculatorTest {
     }
 
     @Test
-    void shouldHaveNoFeeWhenCancelledByDriver() {
+    void shouldHaveNoFeeWhenCancelledByDriver() throws Exception {
 
         FeePreviewRequest request = new FeePreviewRequest(
                 OffsetDateTime.now(),
@@ -371,7 +372,7 @@ public class WaitingCalculatorTest {
     }
 
     @Test
-    void shouldCalculateActiveAndPausedTimeWhenDriverMovesOutAndBackToPickup() {
+    void shouldCalculateActiveAndPausedTimeWhenDriverMovesOutAndBackToPickup() throws Exception {
 
         FeePreviewRequest request = new FeePreviewRequest(
                 OffsetDateTime.now(),
@@ -416,7 +417,7 @@ public class WaitingCalculatorTest {
     }
 
     @Test
-    void shouldHaveFeeWhenLastPingBeforeEndDate() {
+    void shouldHaveFeeWhenLastPingBeforeEndDate() throws Exception {
 
         FeePreviewRequest request = new FeePreviewRequest(
                 OffsetDateTime.now(),
@@ -461,7 +462,7 @@ public class WaitingCalculatorTest {
         }
 
     @Test
-    void shouldHaveNoFeeWhenPingPauseAll() {
+    void shouldHaveNoFeeWhenPingPauseAll() throws Exception {
 
         FeePreviewRequest request = new FeePreviewRequest(
                 OffsetDateTime.now(),
@@ -507,7 +508,7 @@ public class WaitingCalculatorTest {
     }
 
     @Test
-    void shouldHaveNoFeeWhenPingPauseFirst() {
+    void shouldHaveNoFeeWhenPingPauseFirst() throws Exception {
 
         FeePreviewRequest request = new FeePreviewRequest(
                 OffsetDateTime.now(),
@@ -545,7 +546,7 @@ public class WaitingCalculatorTest {
     }
 
     @Test
-    void shouldCalculateFeeCorrectlyWhenDriverPingsAreUnordered() {
+    void shouldCalculateFeeCorrectlyWhenDriverPingsAreUnordered() throws Exception {
 
         OffsetDateTime arrivedAt =
                 OffsetDateTime.parse("2026-08-12T14:00:00+07:00");
@@ -597,6 +598,72 @@ public class WaitingCalculatorTest {
         assertThat(response.waitingFeeCapped()).isFalse();
         assertThat(response.cancellationFee()).isZero();
         assertThat(response.cancellationFeeCapped()).isFalse();
+    }
+
+    @Test
+    void shouldRejectEndDateDateLessThanArriveDate() {
+
+        OffsetDateTime arrivedAt =
+                OffsetDateTime.parse("2026-08-12T14:00:00+07:00");
+
+        FeePreviewRequest request = new FeePreviewRequest(
+                arrivedAt.plusMinutes(1),
+                arrivedAt,
+                EndReason.TRIP_STARTED,
+
+                new PickupPoint(
+                        PICKUP_LAT,
+                        PICKUP_LNG
+                ),
+
+                // Sengaja unordered
+                List.of(
+                        new DriverPing(
+                                arrivedAt.plusMinutes(20),
+                                PICKUP_LAT + 0.00035,
+                                PICKUP_LNG
+                        )
+                )
+        );
+
+        assertThatThrownBy(() ->
+                waitingFeeCalculatorService.calculate("ORD-001", request)
+        )
+                .isInstanceOf(Exception.class)
+                .hasMessage("Order endedAt must be before arrivedAt");
+    }
+
+    @Test
+    void shouldRejectOrderIdIsNull() throws Exception {
+
+        OffsetDateTime arrivedAt =
+                OffsetDateTime.parse("2026-08-12T14:00:00+07:00");
+
+        FeePreviewRequest request = new FeePreviewRequest(
+                arrivedAt,
+                arrivedAt.plusMinutes(1),
+                EndReason.TRIP_STARTED,
+
+                new PickupPoint(
+                        PICKUP_LAT,
+                        PICKUP_LNG
+                ),
+
+                // Sengaja unordered
+                List.of(
+                        new DriverPing(
+                                arrivedAt.plusMinutes(20),
+                                PICKUP_LAT + 0.00035,
+                                PICKUP_LNG
+                        )
+                )
+        );
+
+        assertThatThrownBy(() ->
+                waitingFeeCalculatorService.calculate(null, request)
+        )
+                .isInstanceOf(Exception.class)
+                .hasMessage("Order id cannot be null");
     }
 
 }
