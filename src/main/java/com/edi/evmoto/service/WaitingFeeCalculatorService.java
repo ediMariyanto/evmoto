@@ -30,7 +30,7 @@ public class WaitingFeeCalculatorService {
         log.info("calculate : {} {}", orderId, feePreviewRequest);
 
         if (feePreviewRequest.endedAt().isBefore(feePreviewRequest.arrivedAt()))
-            throw new Exception("Order endedAt must be before arrivedAt");
+            throw new Exception("endedAt cannot be before arrivedAt");
         if (orderId == null)
             throw new Exception("Order id cannot be null");
 
