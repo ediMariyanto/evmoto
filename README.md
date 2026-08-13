@@ -179,5 +179,5 @@ shouldCalculateActiveAndPausedTimeWhenDriverMovesOutAndBackToPickup
 * Menambahkan test untuk timestamp yang tidak valid.
 * Menambahkan OpenAPI/Swagger documentation.
 * Memindahkan konfigurasi tarif dan cap dari hardcoded value ke configuration object.
-* 
+* melakukan tuning terhadap code agar bisa lebih clean
  
