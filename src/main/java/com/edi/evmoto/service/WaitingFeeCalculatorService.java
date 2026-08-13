@@ -120,7 +120,8 @@ public class WaitingFeeCalculatorService {
             if (feePreviewRequest.endReason().equals(EndReason.CANCELLED_BY_CUSTOMER)) {
                 long waitingCancelFee = paidWaitingMinutes * FEE_PER_MINUTE;
                 if (waitingCancelFee > 0) {
-                    cancellationFee = CANCELLATION_FEE + waitingFee;
+                    cancellationFee = Math.min((CANCELLATION_FEE + waitingFee), MAX_CANCELLATION_FEE);
+
                     totalFee = Math.min(cancellationFee, MAX_CANCELLATION_FEE);
 
                     if (cancellationFee == MAX_CANCELLATION_FEE)
