@@ -176,8 +176,10 @@ shouldCalculateActiveAndPausedTimeWhenDriverMovesOutAndBackToPickup
 * Menggunakan custom exception untuk validation error.
 * Menambahkan global exception handler untuk REST API.
 * Menambahkan CI pipeline untuk menjalankan test dan build secara otomatis.
+* Membuat profile configurasi (dev, staging, prod)
 * Menambahkan test untuk timestamp yang tidak valid.
 * Menambahkan OpenAPI/Swagger documentation.
 * Memindahkan konfigurasi tarif dan cap dari hardcoded value ke configuration object.
 * melakukan tuning terhadap code agar bisa lebih clean
+* Membuat Profile Configurasi (dev, staging, prod)
  
