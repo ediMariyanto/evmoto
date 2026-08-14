@@ -631,7 +631,7 @@ public class WaitingCalculatorTest {
                 waitingFeeCalculatorService.calculate("ORD-001", request)
         )
                 .isInstanceOf(Exception.class)
-                .hasMessage("Order endedAt must be before arrivedAt");
+                .hasMessage("endedAt cannot be before arrivedAt");
     }
 
     @Test
